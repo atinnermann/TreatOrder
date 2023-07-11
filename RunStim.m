@@ -1,14 +1,25 @@
 function t = RunStim(tempOrder,nTrials,timings,s,t,com,keys)
 
-%if Trial number is not defined, will take length of tempOrder
-if isempty(nTrials) || nTrials == 0
-    nTrials = length(tempOrder);
-end
+tCount = 1;
 
-%if tempOrder contains just one number, will use the nTrials for number of
-%repetitions
-if length(tempOrder) == 1
-    tempOrder = repmat(tempOrder,1,nTrials);
+if isempty(nTrials)
+    %if Trial number is not defined or 0, will take length of tempOrder
+    nTrials = length(tempOrder);
+elseif isscalar(nTrials)
+    if nTrials == 0  
+        nTrials = length(tempOrder);
+    elseif nTrials > 0 && length(tempOrder) == 1 
+        %if tempOrder contains just one number, will use the nTrials for number of repetitions
+        tempOrder = repmat(tempOrder,1,nTrials);
+    end
+elseif size(nTrials,2) == 2
+    %if tempOrder contains just one number but nTrials two numbers, it will
+    %start the loop not with 1 but with the sum of both nTrials numbers
+    if length(tempOrder) == 1
+        tempOrder = [t.tmp.temp-t.log.awis.thresh tempOrder];
+        nTrials = nTrials(1) + nTrials(2);
+        tCount = nTrials;
+    end
 end
 
 %tempOrder can be defined as numbers added to pain threshold or as actual
@@ -31,9 +42,9 @@ end
 
 t.tmp.scaleInitVAS = round(26+(76-26).*rand(1,nTrials));
 
-for nTrial = 1:nTrials
-    
-    fprintf('\n=======TRIAL %d of %d=======\n',nTrial,length(tempOrder));
+for nTrial = tCount:nTrials 
+     
+    fprintf('\n=======TRIAL %d of %d=======\n',nTrial,nTrials);
     
     %first ITI
     if nTrial == 1

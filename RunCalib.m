@@ -5,7 +5,7 @@ function [abort] = RunCalib(subID)
 clear mex global
 clc
 
-thermoino       = 1; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
+thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
 preExp          = 0;  %40°C preexposure
 awisThresh      = 0;  %pain threshold estimation
@@ -13,6 +13,9 @@ awisTest        = 0;  %2 stimuli at pain threshold
 rangeCalib      = 0;  %4 stimuli to estimate pain range
 Calib           = 0;  %12 stimuli calibration
 chooseFit       = 1;  %choose linear/sigmoid/manual temps
+rangeCalib      = 0;  %3 stimuli to estimate pain range plus adaptive trials
+Calib           = 0;  %9 stimuli calibration
+chooseFit       = 0;  %choose linear/sigmoid/manual temps
 calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
 
 [~, hostname]   = system('hostname');
@@ -175,7 +178,7 @@ if awisTest == 1
     
     if max(t.tmp.rating) >= 30
         ListenChar;
-        commandwindow;       
+        commandwindow;
         fprintf('Subject rated pain threshold above 30 with %d VAS\n',max(t.tmp.rating));
         todo = input('How do you want to proceed? Redo thresholding or continue? (thresh/cont): ','s');
         if strcmp(todo,'thresh')
@@ -228,17 +231,74 @@ if rangeCalib == 1
     fileName        = [sprintf('Sub%02.2d',subID) '_range_' datestr(now,30)];
     t.tmp.saveName  = fullfile(t.savePath,fileName);
     
-    %calculate and shuffle ITI and Cue durations
-    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder),t.calib.ITI,t.calib.Cue);
+%     %calculate and shuffle ITI and Cue durations
+%     t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder),t.calib.ITI,t.calib.Cue);
+%     
+%     %apply 4 stimuli to estimate pain window
+%     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
+%     if ishandle(tFig);close(tFig);end
+%     
+%     %estimate linear/sigmoid fit
+%     t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
+%     
+%     %calculate temperatures for next calib step based on sigmoid fit
+
+    %check if pain range has already been estimated
+    if isfield(t.log,'range')
+        fprintf('\nRange estimation already exists for this sub\n');
+        fprintf('\nDeleting old data now\n');
+        t.log = rmfield(t.log,'range');
+        t.calib.rangeOrder2 = [];
+    end
     
-    %apply 4 stimuli to estimate pain window
+    %calculate and shuffle ITI and Cue durations
+    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder)+4,t.calib.ITI,t.calib.Cue);
+    
+    %apply 3 stimuli to estimate pain window
     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
     if ishandle(tFig);close(tFig);end
+    
+    minRat = 35;
+    maxRat = 75;
+    t.calib.rangeOrder2 = t.calib.rangeOrder;
+    %check rating range
+    if min(t.tmp.rating) > minRat || max(t.tmp.rating) < maxRat
+        newLow = t.calib.rangeOrder(1);
+        newHigh = t.calib.rangeOrder(3);
+        while min(t.tmp.rating) > minRat
+            fprintf('\nLowest pain rating is above %d\n',minRat);
+            fprintf('\nAdding a trial with a lower temperature\n');
+            newLow = newLow - 0.3;
+            if t.log.awis.thresh + newLow < t.glob.minTemp
+                fprintf('\nQuitting since a lower temperature than 42 would be applied\n');
+                break
+            end
+            t = RunStim(newLow,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
+            t.calib.rangeOrder2 = [t.calib.rangeOrder2 newLow];
+        end
+        while max(t.tmp.rating) < maxRat
+            fprintf('\nHighest pain rating is below %d\n',maxRat);
+            fprintf('\nAdding a trial with a higher temperature\n');
+            newHigh = newHigh + 0.5;
+            if t.log.awis.thresh + newHigh > t.glob.maxTemp
+                fprintf('\nQuitting since a higher temperature than 48 would be applied\n');
+                break
+            end
+            t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
+            t.calib.rangeOrder2 = [t.calib.rangeOrder2 newHigh];
+        end
+    else
+        fprintf('\nAll pain ratings within reasonable range\n');
+        fprintf('\nAdding a trial with a middle temperature\n');
+        newValue = 1.5;
+        t = RunStim(newValue,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
+        t.calib.rangeOrder2 = [t.calib.rangeOrder2 newValue];
+    end
     
     %estimate linear/sigmoid fit
     t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
     
-    %calculate temperatures for next calib step based on sigmoid fit
+    %calculate temperatures for next calib step based on better fit
     [~, ind] = ismember(t.calib.VASOrder,t.calib.VASrange);
     
     %choose better fit based on residuals
@@ -252,16 +312,17 @@ if rangeCalib == 1
     
     %control figure appearance and duration appearance
     set(t.hFig, 'Visible', 'on');
-    savefig(t.hFig,fullfile(t.savePath,'Fig_Range.fig'));    
+    savefig(t.hFig,fullfile(t.savePath,'Fig_Range.fig'));
     ShowInstruction(6,keys,s,com,1);
     close(t.hFig);
     t = rmfield(t,'hFig');
     
-    %check fit and either continue, change fit or abort    
+
+    %check fit and either continue, change fit or abort
     f = 0;
     while f == 0
         ListenChar;
-        commandwindow;        
+        commandwindow;
         yn = input('Do you want to continue? (y/n): ','s');
         if ~isempty(yn)
             f = 1;
@@ -306,7 +367,7 @@ if Calib == 1
     fprintf('\n=======Calibration=======\n');
     
     %necessary step to get focus away from command window
-    tFig = figure;set(tFig,'Position',[1200 550 100 100]); pause(1); 
+    tFig = figure;set(tFig,'Position',[1200 550 100 100]); pause(1);
     
     %define file name for saving results
     fileName        = [sprintf('Sub%02.2d',subID) '_calib_' datestr(now,30)];
@@ -319,64 +380,89 @@ if Calib == 1
     if ishandle(tFig);close(tFig);end
     
     %estimate linear and sigmoid fit
-    t = FitData(t.calib.temps,t.tmp.rating,t.calib.targetVAS,t);
+    t = FitData([t.log.range.temp t.calib.temps],[t.log.range.rating t.tmp.rating],t.calib.targetVAS,t);
     
     %control figure appearance and duration appearance
     hFig = t.hFig;
     t = rmfield(t,'hFig');
     set(hFig, 'Visible', 'on');
     savefig(hFig,fullfile(t.savePath,'Fig_Calib.fig'));
+
     ShowInstruction(6,keys,s,com,1);   
     set(hFig, 'Visible', 'off');
     
-    %rename rating fields since they are saved in tmp variable
-    t.log.calib =  t.tmp;
-    t = rmfield(t,'tmp');
+    %check for negative/flat slope and calculate substitute temps for failed
+    %calibration
+    if any(diff(t.log.calib.sig) < 0.1) ||  any(diff(t.log.calib.lin) < 0.1)
+        fprintf('\nSub shows inconsistent ratings with a negative/flat slope.\n');
+        fprintf('\nFixed temps are now calculated:\n');
+        maxTemp = max(t.tmp.temp);
+        maxTempR = t.tmp.rating(t.tmp.temp == maxTemp);
+        if maxTemp >= 44
+            offset = 1;
+        elseif maxTemp < 44
+            offset = (maxTemp-t.glob.minTemp)/3;
+        end
+    if maxTempR > 80
+        maxTemp = maxTemp - 0.5;
+    elseif maxTempR < 66 && maxTemp <= t.glob.maxTemp - 0.5
+        maxTemp = maxTemp + 0.5;
+    end
+    t.log.calib.fix = [maxTemp-3*offset maxTemp-2*offset maxTemp-offset maxTemp];
+    disp(t.log.calib.fix);
+    end
     
-    %save struct to save all results
-    save(t.saveFile, 't');
-    
+%rename rating fields since they are saved in tmp variable
+t.log.calib =  t.tmp;
+t = rmfield(t,'tmp');
+
+%save struct to save all results
+save(t.saveFile, 't');
+
 end
 
 %% choose temperatures for calib test and experiment
 
 if chooseFit == 1
-        
+
     f = 0;
-    while f == 0        
+    while f == 0
         ListenChar;
         commandwindow;
-        chosenFit = input('What fit do you want to use? (sig/lin/manual): ','s');
+        chosenFit = input('What fit do you want to use? (sig/lin/fix/man): ','s');
         if ~isempty(chosenFit)
             f = 1;
         end
     end
     chosenFit = deblank(chosenFit);
-    t.log.calib.manual = [];
+    t.log.calib.man = [];
     if strcmpi(chosenFit, 'sig')
         t.calib.test.temps = t.log.calib.sig;
     elseif strcmpi(chosenFit, 'lin')
         t.calib.test.temps = t.log.calib.lin;
-    elseif strcmpi(chosenFit, 'manual')
-        temps_vec = input('Which temperatures do you want to use?\nAnswer should be 4 temps in a vector:\n');
-        if size(temps_vec,2) == 4
+    elseif strcmpi(chosenFit, 'fix')
+            t.calib.test.temps = t.log.calib.fix;
+    elseif strcmpi(chosenFit, 'man')
+            temps_vec = input('Which temperatures do you want to use?\nAnswer should be 4 temps in a vector:\n');
+            if size(temps_vec,2) ~= 4
+                temps_vec = input('\n You did not enter 4 temps in a vector. Please try again:\n');
+            end
             t.calib.test.temps = temps_vec;
-        else
-            temps_vec = input('\n You did not enter 4 temps in a vector. Please try again:\n');
-            t.calib.test.temps = temps_vec;
-        end
-        t.log.calib.manual = temps_vec;
+            t.log.calib.man = temps_vec;
     end
     ListenChar(-1);
     
-    tVAS_sig = t.log.calib.sig;
-    tVAS_lin = t.log.calib.lin;
-    tVAS_man = t.log.calib.manual;
+    tVAS.sig = t.log.calib.sig;
+    tVAS.lin = t.log.calib.lin;
+    tVAS.man = t.log.calib.man;
+    
+    if isfield(t.log.calib,'fix')
+        tVAS.fix = t.log.calib.fix;
+    end
     
     %save struct to save all results
     save(t.saveFile, 't');
-    save(fullfile(t.savePath,sprintf('Sub%02.2d_tVAS.mat',subID)),'tVAS_sig','tVAS_lin','tVAS_man');
-    
+    save(fullfile(t.savePath,sprintf('Sub%02.2d_tVAS.mat',subID)),'tVAS');  
 end
 
 %% Calibration Test
@@ -409,7 +495,7 @@ if calibTest == 1
     
     f2 = figure;
     set(f2,'Position',[860 260 500 400]);
-    plot(t.log.calibTest.temp, t.log.calibTest.rating, 'kx','MarkerSize',10); hold on
+    plot(t.log.calibTest.temp(1:4), mean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
     plot(t.calib.test.temps,t.calib.targetVAS,'ro');
     
     for d = 1:size(t.calib.test.temps,2)
@@ -421,7 +507,7 @@ if calibTest == 1
     
     savefig(f2,fullfile(t.savePath,'Fig_CalibTest.fig'));
     if ishandle(hFig)
-        set(hFig, 'Visible', 'on');  
+        set(hFig, 'Visible', 'on');
     end
 end
 

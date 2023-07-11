@@ -24,12 +24,13 @@ t.glob.riseSpeed      = 15; % to determine approximate wait time
 t.glob.fallSpeed      = 15; % to determine approximate wait time
 
 t.glob.maxTemp        = 48;
+t.glob.minTemp        = 41;
 t.glob.minThresh      = 41;
 t.glob.maxThresh      = 45;
 t.glob.defaultThresh  = 42;
 
-t.glob.ratingDur      = 5;
 
+t.glob.ratingDur      = 6;
 t.glob.sBlank         = 0.5;
 t.glob.firstITI       = 3; % override, no reason for this to be so long
 t.glob.lastITI        = 3;
@@ -38,7 +39,7 @@ t.glob.cueing         = 1; %switch cueing on or off
 
 t.calib.targetVAS     = [25 40 55 70];
 t.calib.VASrange      = 0:10:100;
-t.calib.rangeOrder    = [0.5 1 2 2.5];
+t.calib.rangeOrder    = [0.5 1 2];
 
 if ~toggleDebug
     t.glob.debug      = 0;
@@ -49,7 +50,7 @@ if ~toggleDebug
     t.awis.Cue        = [1.5 2.5]; % jittered time prior to the stimulus that the white cross turns red; can be [0 0] (to turn off red cross altogether), but else MUST NOT BE LOWER THAN 0.5
     
 %     t.calib.tempOrder = [-1 0 1 2 -2 -0.5 0.5 1.5 2.5 -1 0 1 2 -1 0 1];
-    t.calib.VASOrder  = [10 30 50 70 0 20 40 60 80 10 50 90];
+    t.calib.VASOrder  = [20 50 80 0 30 60 10 40 70];
     t.calib.stimDur   = 6; % to determine approximate wait time % pain stimulus duration
     t.calib.ITI       = [11 15];  
     t.calib.Cue       = [1.5 2.5]; 
