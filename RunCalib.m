@@ -10,12 +10,9 @@ thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: sen
 preExp          = 0;  %40°C preexposure
 awisThresh      = 0;  %pain threshold estimation
 awisTest        = 0;  %2 stimuli at pain threshold
-rangeCalib      = 0;  %4 stimuli to estimate pain range
-Calib           = 0;  %12 stimuli calibration
-chooseFit       = 1;  %choose linear/sigmoid/manual temps
 rangeCalib      = 0;  %3 stimuli to estimate pain range plus adaptive trials
-Calib           = 0;  %9 stimuli calibration
-chooseFit       = 0;  %choose linear/sigmoid/manual temps
+Calib           = 1;  %9 stimuli calibration
+chooseFit       = 1;  %choose linear/sigmoid/manual temps
 calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
 
 [~, hostname]   = system('hostname');
@@ -42,11 +39,14 @@ end
 
 if strcmp(hostname,'stimpc1')
     basePath    = '';
+elseif strcmp(hostname,'isn0068ebea3a78')
+    basePath    = 'C:\Users\alexandra\Documents\Projects\TreatOrder\Paradigma\';
 else
-    basePath    = 'C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\Calib\';
+    basePath    = 'C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\';
 end
 
-savePath = fullfile(basePath,'LogfilesCalib',sprintf('Sub%02.2d',subID));
+calibPath = fullfile(basePath,'Calib');
+savePath = fullfile(calibPath,'LogfilesCalib',sprintf('Sub%02.2d',subID));
 mkdir(savePath);
 fprintf('Saving data to %s.\n',savePath);
 
@@ -65,7 +65,7 @@ commandwindow;
 t.savePath      = savePath;
 t.saveFile      = fullfile(savePath,sprintf('Sub%02.2d_tStruct',subID));
 
-b = load('C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\ExpBehav\randOrder_SkinPatches.mat');
+b = load(fullfile(basePath,'ExpBehav','randOrder_SkinPatches.mat'));
 t.calib.skinPatch = b.randPatch(subID,:);
 
 if preExp == 1
@@ -231,18 +231,18 @@ if rangeCalib == 1
     fileName        = [sprintf('Sub%02.2d',subID) '_range_' datestr(now,30)];
     t.tmp.saveName  = fullfile(t.savePath,fileName);
     
-%     %calculate and shuffle ITI and Cue durations
-%     t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder),t.calib.ITI,t.calib.Cue);
-%     
-%     %apply 4 stimuli to estimate pain window
-%     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
-%     if ishandle(tFig);close(tFig);end
-%     
-%     %estimate linear/sigmoid fit
-%     t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
-%     
-%     %calculate temperatures for next calib step based on sigmoid fit
-
+    %     %calculate and shuffle ITI and Cue durations
+    %     t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder),t.calib.ITI,t.calib.Cue);
+    %
+    %     %apply 4 stimuli to estimate pain window
+    %     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
+    %     if ishandle(tFig);close(tFig);end
+    %
+    %     %estimate linear/sigmoid fit
+    %     t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
+    %
+    %     %calculate temperatures for next calib step based on sigmoid fit
+    
     %check if pain range has already been estimated
     if isfield(t.log,'range')
         fprintf('\nRange estimation already exists for this sub\n');
@@ -317,7 +317,7 @@ if rangeCalib == 1
     close(t.hFig);
     t = rmfield(t,'hFig');
     
-
+    
     %check fit and either continue, change fit or abort
     f = 0;
     while f == 0
@@ -387,9 +387,16 @@ if Calib == 1
     t = rmfield(t,'hFig');
     set(hFig, 'Visible', 'on');
     savefig(hFig,fullfile(t.savePath,'Fig_Calib.fig'));
-
-    ShowInstruction(6,keys,s,com,1);   
+    
+    ShowInstruction(6,keys,s,com,1);
     set(hFig, 'Visible', 'off');
+    
+    %rename rating fields since they are saved in tmp variable
+    t.log.calib =  t.tmp;
+    t = rmfield(t,'tmp');
+    
+    %save struct to save all results
+    save(t.saveFile, 't');
     
     %check for negative/flat slope and calculate substitute temps for failed
     %calibration
@@ -403,28 +410,21 @@ if Calib == 1
         elseif maxTemp < 44
             offset = (maxTemp-t.glob.minTemp)/3;
         end
-    if maxTempR > 80
-        maxTemp = maxTemp - 0.5;
-    elseif maxTempR < 66 && maxTemp <= t.glob.maxTemp - 0.5
-        maxTemp = maxTemp + 0.5;
+        if maxTempR > 80
+            maxTemp = maxTemp - 0.5;
+        elseif maxTempR < 66 && maxTemp <= t.glob.maxTemp - 0.5
+            maxTemp = maxTemp + 0.5;
+        end
+        t.log.calib.fix = [maxTemp-3*offset maxTemp-2*offset maxTemp-offset maxTemp];
+        disp(t.log.calib.fix);
     end
-    t.log.calib.fix = [maxTemp-3*offset maxTemp-2*offset maxTemp-offset maxTemp];
-    disp(t.log.calib.fix);
-    end
-    
-%rename rating fields since they are saved in tmp variable
-t.log.calib =  t.tmp;
-t = rmfield(t,'tmp');
-
-%save struct to save all results
-save(t.saveFile, 't');
 
 end
 
 %% choose temperatures for calib test and experiment
 
 if chooseFit == 1
-
+    
     f = 0;
     while f == 0
         ListenChar;
@@ -441,14 +441,14 @@ if chooseFit == 1
     elseif strcmpi(chosenFit, 'lin')
         t.calib.test.temps = t.log.calib.lin;
     elseif strcmpi(chosenFit, 'fix')
-            t.calib.test.temps = t.log.calib.fix;
+        t.calib.test.temps = t.log.calib.fix;
     elseif strcmpi(chosenFit, 'man')
-            temps_vec = input('Which temperatures do you want to use?\nAnswer should be 4 temps in a vector:\n');
-            if size(temps_vec,2) ~= 4
-                temps_vec = input('\n You did not enter 4 temps in a vector. Please try again:\n');
-            end
-            t.calib.test.temps = temps_vec;
-            t.log.calib.man = temps_vec;
+        temps_vec = input('Which temperatures do you want to use?\nAnswer should be 4 temps in a vector:\n');
+        if size(temps_vec,2) ~= 4
+            temps_vec = input('\n You did not enter 4 temps in a vector. Please try again:\n');
+        end
+        t.calib.test.temps = temps_vec;
+        t.log.calib.man = temps_vec;
     end
     ListenChar(-1);
     
@@ -462,7 +462,7 @@ if chooseFit == 1
     
     %save struct to save all results
     save(t.saveFile, 't');
-    save(fullfile(t.savePath,sprintf('Sub%02.2d_tVAS.mat',subID)),'tVAS');  
+    save(fullfile(t.savePath,sprintf('Sub%02.2d_tVAS.mat',subID)),'tVAS');
 end
 
 %% Calibration Test
