@@ -5,15 +5,15 @@ function [abort] = RunCalib(subID)
 clear mex global
 clc
 
-thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
+thermoino       = 1; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
-preExp          = 0;  %40°C preexposure
-awisThresh      = 0;  %pain threshold estimation
-awisTest        = 0;  %2 stimuli at pain threshold
-rangeCalib      = 0;  %3 stimuli to estimate pain range plus adaptive trials
+preExp          = 1;  %40°C preexposure
+awisThresh      = 1;  %pain threshold estimation
+awisTest        = 1;  %2 stimuli at pain threshold
+rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
 Calib           = 1;  %9 stimuli calibration
 chooseFit       = 1;  %choose linear/sigmoid/manual temps
-calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
+calibTest       = 0;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
 
 [~, hostname]   = system('hostname');
 
@@ -425,6 +425,14 @@ end
 
 if chooseFit == 1
     
+    if Calib == 0
+        try
+            openfig([t.savePath 'Fig_Calib.fig']);
+        catch
+            disp('Could not open Calib figure');
+        end
+    end
+    
     f = 0;
     while f == 0
         ListenChar;
@@ -495,7 +503,7 @@ if calibTest == 1
     
     f2 = figure;
     set(f2,'Position',[860 260 500 400]);
-    plot(t.log.calibTest.temp(1:4), mean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
+    plot(t.log.calibTest.temp(1:4), nanmean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
     plot(t.calib.test.temps,t.calib.targetVAS,'ro');
     
     for d = 1:size(t.calib.test.temps,2)
@@ -506,9 +514,9 @@ if calibTest == 1
     ylim([0 100]);
     
     savefig(f2,fullfile(t.savePath,'Fig_CalibTest.fig'));
-    if ishandle(hFig)
-        set(hFig, 'Visible', 'on');
-    end
+%     if ishandle(f2)
+%         set(f2, 'Visible', 'on');
+%     end
 end
 
 %% End
