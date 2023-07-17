@@ -37,6 +37,7 @@ t.glob.lastITI        = 3;
 
 t.glob.cueing         = 1; %switch cueing on or off
 
+t.calib.maxAdapTrials = 6;
 t.calib.targetVAS     = [25 40 55 70];
 t.calib.VASrange      = 0:10:100;
 t.calib.rangeOrder    = [0.5 1 2];

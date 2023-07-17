@@ -231,18 +231,6 @@ if rangeCalib == 1
     fileName        = [sprintf('Sub%02.2d',subID) '_range_' datestr(now,30)];
     t.tmp.saveName  = fullfile(t.savePath,fileName);
     
-    %     %calculate and shuffle ITI and Cue durations
-    %     t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder),t.calib.ITI,t.calib.Cue);
-    %
-    %     %apply 4 stimuli to estimate pain window
-    %     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
-    %     if ishandle(tFig);close(tFig);end
-    %
-    %     %estimate linear/sigmoid fit
-    %     t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
-    %
-    %     %calculate temperatures for next calib step based on sigmoid fit
-    
     %check if pain range has already been estimated
     if isfield(t.log,'range')
         fprintf('\nRange estimation already exists for this sub\n');
@@ -252,7 +240,7 @@ if rangeCalib == 1
     end
     
     %calculate and shuffle ITI and Cue durations
-    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder)+4,t.calib.ITI,t.calib.Cue);
+    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder)+t.calib.maxAdapTrials,t.calib.ITI,t.calib.Cue);
     
     %apply 3 stimuli to estimate pain window
     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
@@ -262,10 +250,11 @@ if rangeCalib == 1
     maxRat = 75;
     t.calib.rangeOrder2 = t.calib.rangeOrder;
     %check rating range
-    if min(t.tmp.rating) > minRat || max(t.tmp.rating) < maxRat
+    if min(t.tmp.rating) > minRat || max(t.tmp.rating) < maxRat 
         newLow = t.calib.rangeOrder(1);
         newHigh = t.calib.rangeOrder(3);
-        while min(t.tmp.rating) > minRat
+        aT = 1;
+        while min(t.tmp.rating) > minRat && aT <= t.calib.maxAdapTrials/2
             fprintf('\nLowest pain rating is above %d\n',minRat);
             fprintf('\nAdding a trial with a lower temperature\n');
             newLow = newLow - 0.3;
@@ -275,8 +264,10 @@ if rangeCalib == 1
             end
             t = RunStim(newLow,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
             t.calib.rangeOrder2 = [t.calib.rangeOrder2 newLow];
+            aT = aT + 1;
         end
-        while max(t.tmp.rating) < maxRat
+        aT = 1;
+        while max(t.tmp.rating) < maxRat && aT <= t.calib.maxAdapTrials/2
             fprintf('\nHighest pain rating is below %d\n',maxRat);
             fprintf('\nAdding a trial with a higher temperature\n');
             newHigh = newHigh + 0.5;
@@ -286,7 +277,8 @@ if rangeCalib == 1
             end
             t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
             t.calib.rangeOrder2 = [t.calib.rangeOrder2 newHigh];
-        end
+            aT = aT + 1;
+        end      
     else
         fprintf('\nAll pain ratings within reasonable range\n');
         fprintf('\nAdding a trial with a middle temperature\n');
