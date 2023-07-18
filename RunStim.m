@@ -23,22 +23,42 @@ elseif size(nTrials,2) == 2
 end
 
 %tempOrder can be defined as numbers added to pain threshold or as actual
-%temperatures
-if min(tempOrder) >= -2 && max(tempOrder) <= 3
+%temperatures, checking through one or two digit input
+if all((floor(log10(abs(tempOrder)+1))+1)==1)
     temps = tempOrder + t.log.awis.thresh;
-elseif min(tempOrder) >= 38 && max(tempOrder) <= 48
+elseif all((floor(log10(abs(tempOrder)+1))+1)==2)
     temps = tempOrder;
-else 
-    error('No reasonable temperatures detected!');
+else
+    disp(tempOrder);
+    error('No reasonable temps detected, please check numbers above');
+end
+  
+%check plausibility of temps
+if min(temps) < t.glob.minTemp-2 && max(temps) > t.glob.maxTemp
+    warning('Attention: temps below %d or above %d detected!!!!!!!!!!!!!',t.glob.minTemp-2,t.glob.maxTemp);
+end
+    
+if any(temps > t.glob.maxTemp)
+    if sum(temps > t.glob.maxTemp) < 3
+        temps(temps > t.glob.maxTemp) = t.glob.maxTemp;
+        fprintf('%d trial(s) with higher temp detected, lowering to %d°C',sum(temps > t.glob.maxTemp),t.glob.maxTemp);
+    elseif sum(temps > t.glob.maxTemp) > 2
+        disp(temps);
+        error('More than 2 trials above %d°C detected, please check participant ratings',t.glob.maxTemp);
+    end
+elseif any(temps < t.glob.minTemp-2)
+    if sum(temps < t.glob.minTemp-2) < 3
+        disp(temps);
+        fprintf('%d trial(s) with lower temp detected, increasing to %d°C',sum(temps < t.glob.minTemp-2),t.glob.minTemp-2);
+    elseif sum(temps < t.glob.minTemp-2) > 2
+        disp(temps);
+        error('More than 2 temps below %d°C detected, please check participant ratings',t.glob.minTemp-2);
+    end
 end
 
 fprintf('\nFollowing temps will be applied:\n');
 fprintf(' %3.1f  ',temps);
 fprintf('\n');
-
-if any(temps > 48)
-    error('Temps above 48°C detected, aborting now. Please check why!');
-end
 
 t.tmp.scaleInitVAS = round(26+(76-26).*rand(1,nTrials));
 

@@ -5,7 +5,7 @@ function [abort] = RunCalib(subID)
 clear mex global
 clc
 
-thermoino       = 1; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
+thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
 preExp          = 1;  %40°C preexposure
 awisThresh      = 1;  %pain threshold estimation
@@ -13,7 +13,7 @@ awisTest        = 1;  %2 stimuli at pain threshold
 rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
 Calib           = 1;  %9 stimuli calibration
 chooseFit       = 1;  %choose linear/sigmoid/manual temps
-calibTest       = 0;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
+calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
 
 [~, hostname]   = system('hostname');
 
@@ -246,10 +246,13 @@ if rangeCalib == 1
     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
     if ishandle(tFig);close(tFig);end
     
+    %check rating range
+    %when rating is above 35 and/or below 75, adaptive trials will be
+    %added. For lower trials, temp will be reduced by 0.3°C while for 
+    %higher trials 0.5°C are added per trial. Maximum of 6 adaptive trials, 3 per "condition"
     minRat = 35;
     maxRat = 75;
     t.calib.rangeOrder2 = t.calib.rangeOrder;
-    %check rating range
     if min(t.tmp.rating) > minRat || max(t.tmp.rating) < maxRat 
         newLow = t.calib.rangeOrder(1);
         newHigh = t.calib.rangeOrder(3);
@@ -259,7 +262,7 @@ if rangeCalib == 1
             fprintf('\nAdding a trial with a lower temperature\n');
             newLow = newLow - 0.3;
             if t.log.awis.thresh + newLow < t.glob.minTemp
-                fprintf('\nQuitting since a lower temperature than 42 would be applied\n');
+                fprintf('\nQuitting since a lower temperature than %d°C would be applied\n',t.glob.minTemp);
                 break
             end
             t = RunStim(newLow,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
@@ -272,7 +275,7 @@ if rangeCalib == 1
             fprintf('\nAdding a trial with a higher temperature\n');
             newHigh = newHigh + 0.5;
             if t.log.awis.thresh + newHigh > t.glob.maxTemp
-                fprintf('\nQuitting since a higher temperature than 48 would be applied\n');
+                fprintf('\nQuitting since a higher temperature than %d°C would be applied\n',t.glob.maxTemp);
                 break
             end
             t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
