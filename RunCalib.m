@@ -101,6 +101,8 @@ if preExp == 1
     ShowInstruction(4,keys,s,com,1);
     WaitSecs(0.5);
     
+    ShowInstruction(7,keys,s,com,1);    
+    TestStimuli(s,t,com,keys);
 end
 
 %% Awiszus pain threshold estimation
@@ -117,10 +119,10 @@ if awisThresh == 1
     ShowInstruction(2,keys,s,com,1);
     
     %calculate and shuffle ITI and Cue durations
-    t.awis.Timings = DetermineITIandCue(t.awis.nTrials,t.awis.ITI,t.awis.Cue);
+    t.awis.timings = DetermineITIandCue(t.awis.nTrials,t.awis.ITI,t.awis.cue);
     
     %estimate pain threshold based on awiszus
-    t = AwiszusThresholding(t.awis.Timings,s,t,com,keys);
+    t = AwiszusThresholding(t.awis.timings,s,t,com,keys);
     fprintf('\nPain threshold estimated at %3.1f°C\n',t.log.awis.thresh);
     
     %plot results
@@ -189,8 +191,8 @@ if awisTest == 1
             fprintf('Threshold will be lowered until rating is below 30 VAS\n');
             %necessary step to get focus away from command window
             tFig = figure;set(tFig,'Position',[1200 550 100 100]);pause(1);
-            while max(t.tmp.rating) >= 30 && oldThresh > 41
-                newThresh = oldThresh - 0.2;
+            while max(t.tmp.rating) >= 30 && oldThresh >= t.glob.minThresh + 0.3
+                newThresh = oldThresh - 0.3;
                 
                 fprintf('Current pain threshold set to %3.1f°C\n',newThresh);
                 
@@ -240,7 +242,7 @@ if rangeCalib == 1
     end
     
     %calculate and shuffle ITI and Cue durations
-    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder)+t.calib.maxAdapTrials,t.calib.ITI,t.calib.Cue);
+    t.calib.rangeTimings = DetermineITIandCue(length(t.calib.rangeOrder)+t.calib.maxAdapTrials*2,t.calib.ITI,t.calib.Cue);
     
     %apply 3 stimuli to estimate pain window
     t = RunStim(t.calib.rangeOrder,[],t.calib.rangeTimings,s,t,com,keys);
@@ -249,15 +251,16 @@ if rangeCalib == 1
     %check rating range
     %when rating is above 35 and/or below 75, adaptive trials will be
     %added. For lower trials, temp will be reduced by 0.3°C while for 
-    %higher trials 0.5°C are added per trial. Maximum of 6 adaptive trials, 3 per "condition"
+    %higher trials 0.5°C are added per trial. Maximum of 6 adaptive trials,
+    %2 for lower and 4 for higher temps
     minRat = 35;
-    maxRat = 75;
+    maxRat = 70;
     t.calib.rangeOrder2 = t.calib.rangeOrder;
     if min(t.tmp.rating) > minRat || max(t.tmp.rating) < maxRat 
         newLow = t.calib.rangeOrder(1);
         newHigh = t.calib.rangeOrder(3);
         aT = 1;
-        while min(t.tmp.rating) > minRat && aT <= t.calib.maxAdapTrials/2
+        while min(t.tmp.rating) > minRat && aT <= 2
             fprintf('\nLowest pain rating is above %d\n',minRat);
             fprintf('\nAdding a trial with a lower temperature\n');
             newLow = newLow - 0.3;
@@ -269,8 +272,7 @@ if rangeCalib == 1
             t.calib.rangeOrder2 = [t.calib.rangeOrder2 newLow];
             aT = aT + 1;
         end
-        aT = 1;
-        while max(t.tmp.rating) < maxRat && aT <= t.calib.maxAdapTrials/2
+        while max(t.tmp.rating) < maxRat && aT <= t.calib.maxAdapTrials
             fprintf('\nHighest pain rating is below %d\n',maxRat);
             fprintf('\nAdding a trial with a higher temperature\n');
             newHigh = newHigh + 0.5;
@@ -281,6 +283,16 @@ if rangeCalib == 1
             t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
             t.calib.rangeOrder2 = [t.calib.rangeOrder2 newHigh];
             aT = aT + 1;
+            %if after 6 adaptive trials the rating is still below maxRat,
+            %temps will be increased by 1° until 48° are reached
+            if max(t.tmp.rating) < maxRat && aT == t.calib.maxAdapTrials
+                fprintf('\nAfter 6 trials highest pain rating is still below %d\n',maxRat);
+                while max(t.tmp.rating) < maxRat && t.log.awis.thresh + newHigh <= t.glob.maxTemp
+                    newHigh = newHigh + 1;
+                    t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings2,s,t,com,keys);
+                    t.calib.rangeOrder2 = [t.calib.rangeOrder2 newHigh];
+                end           
+            end
         end      
     else
         fprintf('\nAll pain ratings within reasonable range\n');
@@ -305,13 +317,18 @@ if rangeCalib == 1
         fprintf('\nBased on residuals, the sigmoid fit was chosen.\n');
     end
     
+    %check for high temperatures
+    if any(t.calib.temps > t.glob.maxTemp)
+        warning('Caution! Temp higher than 48°C detected, will now lower temp!');
+        t.calib.temps(t.calib.temps > t.glob.maxTemp) = t.glob.maxTemp;
+    end
+    
     %control figure appearance and duration appearance
     set(t.hFig, 'Visible', 'on');
     savefig(t.hFig,fullfile(t.savePath,'Fig_Range.fig'));
     ShowInstruction(6,keys,s,com,1);
     close(t.hFig);
     t = rmfield(t,'hFig');
-    
     
     %check fit and either continue, change fit or abort
     f = 0;
@@ -340,14 +357,17 @@ if rangeCalib == 1
     end
     ListenChar(-1);
     
-    %check for high temperatures
-    if any(t.calib.temps > t.glob.maxTemp)
-        warning('Caution! Temp higher than 48°C detected, will now lower temp!');
-        t.calib.temps(t.calib.temps > t.glob.maxTemp) = t.glob.maxTemp;
-    end
-    
     %rename rating fields since they are saved in tmp variable
     t.log.range = t.tmp;
+    t = rmfield(t,'tmp');
+    
+    %estimate linear/sigmoid fit for target VAS based on range ratings
+    t = FitData([t.log.awis.thresh t.log.range.temp],[mean(t.log.awisTest.rating) t.log.range.rating],t.calib.targetVAS,t);
+    if t.tmp.resLin < t.tmp.resSig
+        t.log.range.targetFit = t.tmp.lin;
+    elseif t.tmp.resLin > t.tmp.resSig
+        t.log.range.targetFit = t.tmp.sig;
+    end
     t = rmfield(t,'tmp');
     
     %save struct to save all results
@@ -393,27 +413,6 @@ if Calib == 1
     %save struct to save all results
     save(t.saveFile, 't');
     
-    %check for negative/flat slope and calculate substitute temps for failed
-    %calibration
-    if any(diff(t.log.calib.sig) < 0.1) ||  any(diff(t.log.calib.lin) < 0.1)
-        fprintf('\nSub shows inconsistent ratings with a negative/flat slope.\n');
-        fprintf('\nFixed temps are now calculated:\n');
-        maxTemp = max(t.tmp.temp);
-        maxTempR = t.tmp.rating(t.tmp.temp == maxTemp);
-        if maxTemp >= 44
-            offset = 1;
-        elseif maxTemp < 44
-            offset = (maxTemp-t.glob.minTemp)/3;
-        end
-        if maxTempR > 80
-            maxTemp = maxTemp - 0.5;
-        elseif maxTempR < 66 && maxTemp <= t.glob.maxTemp - 0.5
-            maxTemp = maxTemp + 0.5;
-        end
-        t.log.calib.fix = [maxTemp-3*offset maxTemp-2*offset maxTemp-offset maxTemp];
-        disp(t.log.calib.fix);
-    end
-
 end
 
 %% choose temperatures for calib test and experiment
@@ -428,11 +427,76 @@ if chooseFit == 1
         end
     end
     
+    %check fit before choosing
+    if t.log.calib.resLin < t.log.calib.resSig
+        fprintf('\nBased on residuals, linear fit is better.\n');
+        t.log.calib.bestFit = 1;
+    elseif t.log.calib.resSig < t.log.calib.resLin
+        fprintf('\nBased on residuals, sigmoid fit is better.\n');
+        t.log.calib.bestFit = 2;
+    end
+    if (any(diff(t.log.calib.lin) <= 0) && t.log.calib.bestFit == 1) || (any(diff(t.log.calib.sig) <= 0) && t.log.calib.bestFit == 2)
+        fprintf('\nSub shows inconsistent ratings with a negative slope.\n');
+        fprintf('\nConsider other fit or fixed temperatures.\n');
+    elseif (any(diff(t.log.calib.lin) <= 0.2) && t.log.calib.bestFit == 1) || (any(diff(t.log.calib.sig) <= 0.2) && t.log.calib.bestFit == 2)
+        fprintf('\nSub needs temperatures that are 0.2° or less apart.\n');
+        fprintf('\nConsider other fit or fixed temperatures.\n');
+    elseif (any(diff(t.log.calib.lin) >= 2) && t.log.calib.bestFit == 1) || (any(diff(t.log.calib.sig) >= 2) && t.log.calib.bestFit == 2)
+        fprintf('\nSub needs temperatures that are 2° or more apart.\n');
+        fprintf('\nConsider other fit or fixed temperatures.\n');
+    end
+
+    %calculate fixed temperatures in case they are needed
+    maxTemp = max(t.log.calib.temp);
+    maxRat = t.log.calib.rating(t.log.calib.temp == maxTemp);
+%     if maxTemp >= 45.5 && (max(t.log.calib.rating)-min(t.log.calib.rating)) < 50 && any(diff(t.log.calib.temp) >= 1)
+%         offset = 1.5;
+    if maxTemp <= 44
+        offset = (maxTemp-t.glob.minTemp)/3;
+    else
+        offset = 1;
+    end
+    if maxRat > 80
+        maxTemp = maxTemp - 0.5;
+    elseif maxRat < 66 && maxTemp <= t.glob.maxTemp - 0.5
+        maxTemp = maxTemp + 0.5;
+    end
+    t.log.calib.fix = [maxTemp-3*offset maxTemp-2*offset maxTemp-offset maxTemp];
+    
+    %if range fit was good but calib ratings are too narrow, range fit is changed accordingly
+    if (max(t.log.calib.rating)-min(t.log.calib.rating)) < 60
+        fprintf('\nRating range is small. Consider range or fixed fit.\n');
+        if max(t.log.calib.rating) < 60
+            fprintf('\nSub rated all temps below 60 VAS.\n');
+            if (max(t.log.range.rating)-min(t.log.range.rating)) > 50
+                t.log.range.targetFit = t.log.range.targetFit + 0.5;
+                fprintf('\nRange fit was changed based on calib ratings.');
+            end
+        elseif min(t.log.calib.rating) > 50
+            fprintf('\nSub rated all temps above 50 VAS.\n');
+            if (max(t.log.range.rating)-min(t.log.range.rating)) > 50
+                t.log.range.targetFit = t.log.range.targetFit - 0.5;
+                fprintf('\nRange fit was changed based on calib ratings.');
+            end
+        elseif min(t.log.calib.rating) > 30 && max(t.log.calib.rating) < 60
+            fprintf('\nSub rated all temps between 30 and 60 VAS.\n');
+            if (max(t.log.range.rating)-min(t.log.range.rating)) > 50
+               t.log.range.targetFit = [t.log.range.targetFit(1)-0.75 t.log.range.targetFit(2)-0.25 t.log.range.targetFit(3)+0.25 t.log.range.targetFit(4) + 0.75];
+               fprintf('\nRange fit was changed based on calib ratings.');
+            end 
+        end
+    end
+    
+    fprintf('\nSuggested temps are:\n');
+    fprintf('   sig       lin       ran       fix\n');
+    disp([t.log.calib.sig' t.log.calib.lin' t.log.range.targetFit' t.log.calib.fix']);
+    
+    
     f = 0;
     while f == 0
         ListenChar;
         commandwindow;
-        chosenFit = input('What fit do you want to use? (sig/lin/fix/man): ','s');
+        chosenFit = input('What fit do you want to use? (sig/lin/ran/fix/man): ','s');
         if ~isempty(chosenFit)
             f = 1;
         end
@@ -443,6 +507,8 @@ if chooseFit == 1
         t.calib.test.temps = t.log.calib.sig;
     elseif strcmpi(chosenFit, 'lin')
         t.calib.test.temps = t.log.calib.lin;
+        elseif strcmpi(chosenFit, 'ran')
+        t.calib.test.temps = t.log.range.targetFit;
     elseif strcmpi(chosenFit, 'fix')
         t.calib.test.temps = t.log.calib.fix;
     elseif strcmpi(chosenFit, 'man')
@@ -457,11 +523,9 @@ if chooseFit == 1
     
     tVAS.sig = t.log.calib.sig;
     tVAS.lin = t.log.calib.lin;
+    tVAS.ran = t.log.range.targetFit;
+    tVAS.fix = t.log.calib.fix;
     tVAS.man = t.log.calib.man;
-    
-    if isfield(t.log.calib,'fix')
-        tVAS.fix = t.log.calib.fix;
-    end
     
     %save struct to save all results
     save(t.saveFile, 't');
@@ -509,9 +573,6 @@ if calibTest == 1
     ylim([0 100]);
     
     savefig(f2,fullfile(t.savePath,'Fig_CalibTest.fig'));
-%     if ishandle(f2)
-%         set(f2, 'Visible', 'on');
-%     end
 end
 
 %% End

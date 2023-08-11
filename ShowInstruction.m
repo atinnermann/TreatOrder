@@ -116,6 +116,10 @@ elseif section == 6
     fprintf('Please check data/figure and press enter when ready.\n');
     heightText = s.startY;
     [~, heightText]=DrawFormattedText(s.wHandle,'','center',heightText,s.white);  
+elseif section == 7
+    heightText = s.startY;
+    [~, heightText]=DrawFormattedText(s.wHandle,'Nun kommen 4 Testreize mit unterschiedlichen Temperaturen.','center',heightText,s.white); 
+    [~, heightText]=DrawFormattedText(s.wHandle,'Wie fühlen die sich an?','center',heightText,s.white);
 end
 
 introTextTime = Screen('Flip',s.wHandle);
