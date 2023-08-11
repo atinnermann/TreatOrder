@@ -7,9 +7,9 @@ clc
 
 thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
-preExp          = 0;  %40°C preexposure
-awisThresh      = 0;  %pain threshold estimation
-awisTest        = 0;  %2 stimuli at pain threshold
+preExp          = 1;  %40°C preexposure
+awisThresh      = 1;  %pain threshold estimation
+awisTest        = 1;  %2 stimuli at pain threshold
 rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
 Calib           = 1;  %9 stimuli calibration
 chooseFit       = 1;  %choose linear/sigmoid/manual temps
@@ -387,9 +387,9 @@ if Calib == 1
     t.tmp.saveName  = fullfile(t.savePath,fileName);
     
     %calculate and shuffle ITI and Cue durations
-    t.calib.timings = DetermineITIandCue(length(t.calib.VASOrder),t.calib.ITI,t.calib.cue);
+    t.calib.Timings = DetermineITIandCue(length(t.calib.VASOrder),t.calib.ITI,t.calib.cue);
     
-    t = RunStim(t.calib.temps,[],t.calib.timings,s,t,com,keys);
+    t = RunStim(t.calib.temps,[],t.calib.Timings,s,t,com,keys);
     if ishandle(tFig);close(tFig);end
     
     %estimate linear and sigmoid fit
@@ -546,10 +546,10 @@ if calibTest == 1
     t.tmp.saveName  = fullfile(t.savePath,fileName);
     
     %calculate and shuffle ITI and Cue durations
-    t.calib.test.timings = DetermineITIandCue(size(t.calib.test.trials,2),t.calib.ITI,t.calib.cue);
+    t.calib.test.Timings = DetermineITIandCue(size(t.calib.test.trials,2),t.calib.ITI,t.calib.Cue);
     
     %apply 4 experimental temps
-    t = RunStim(t.calib.test.trials,[],t.calib.test.timings,s,t,com,keys);
+    t = RunStim(t.calib.test.trials,[],t.calib.test.Timings,s,t,com,keys);
     
     %rename rating fields since they are saved in tmp variable
     t.log.calibTest = t.tmp;

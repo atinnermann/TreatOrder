@@ -13,9 +13,6 @@ if section == 1
     if strcmp(s.language,'de')
         [~,heightText]=DrawFormattedText(s.wHandle, 'Gleich erhalten Sie über die Thermode einen', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, 'langen Hitzereizen, der leicht schmerzhaft sein kann.', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, 'Wir melden uns gleich, falls Sie noch Fragen haben,', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, 'danach geht es los!', 'center', heightText+s.lineheight, s.white);
     elseif strcmp(s.language,'en')
         [~,heightText]=DrawFormattedText(s.wHandle, 'You will now receive a number of very brief heat stimuli,', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, 'which may or may not be painful for you.', 'center', heightText+s.lineheight, s.white);
@@ -41,14 +38,12 @@ elseif section == 2
     if strcmp(s.language,'de')
         [~,heightText]=DrawFormattedText(s.wHandle, 'Gleich beginnt Teil 1 der Schmerzschwellenmessung.', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, 'Sie werden über die Thermode konstante Hitzereize erhalten.', 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Sie werden nun unterschiedliche Hitzereize erhalten.', 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, 'Bitte geben Sie nach jedem Reiz an, ob dieser', 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ['NICHT SCHMERZHAFT ' keyNotPainful ' oder'], 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ['mindestens LEICHT SCHMERZHAFT ' keyPainful ' war.'], 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
-        %[screenRes.width, heightText]=DrawFormattedText(s.wHandle, 'Wir melden uns gleich, falls Sie noch Fragen haben,', 'center', heightText+s.lineheight, s.white);
-        %[screenRes.width, heightText]=DrawFormattedText(s.wHandle, 'danach geht es los!', 'center', heightText+s.lineheight, s.white);
-        [~, heightText]=DrawFormattedText(s.wHandle, 'Gleich geht es los!', 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Es ist SEHR WICHTIG, dass Sie JEDEN der Reize bewerten!', 'center', heightText+s.lineheight, s.white);
     elseif strcmp(s.language,'en')
         [~,heightText]=DrawFormattedText(s.wHandle, 'In a moment, part 1 of the pain threshold calibration will start.', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
@@ -82,12 +77,11 @@ elseif section == 3
     if strcmp(s.language,'de')
         [~,heightText]=DrawFormattedText(s.wHandle, 'Gleich beginnt Teil 2 der Schmerzschwellenmessung.', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, 'Sie werden über die Thermode konstante Hitzereize erhalten.', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, ['Bitte bewerten Sie jeden Reiz mithilfe ' keyMoreLessPainful], 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, ['und bestätigen mit ' keyConfirm '.'], 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Sie werden wieder unterschiedliche Hitzereize erhalten.', 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Bitte bewerten Sie nun jeden Reiz auf der Skala mithilfe', 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, [keyMoreLessPainful ' und bestätigen mit ' keyConfirm '.'], 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, 'Es ist SEHR WICHTIG, dass Sie JEDEN der Reize bewerten!', 'center', heightText+s.lineheight, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
     elseif strcmp(s.language,'en')
         [~,heightText]=DrawFormattedText(s.wHandle, 'In a moment, part 2 of pain threshold calibration will start.', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
@@ -118,8 +112,8 @@ elseif section == 6
     [~, heightText]=DrawFormattedText(s.wHandle,'','center',heightText,s.white);  
 elseif section == 7
     heightText = s.startY;
-    [~, heightText]=DrawFormattedText(s.wHandle,'Nun kommen 4 Testreize mit unterschiedlichen Temperaturen.','center',heightText,s.white); 
-    [~, heightText]=DrawFormattedText(s.wHandle,'Wie fühlen die sich an?','center',heightText,s.white);
+    [~, heightText]=DrawFormattedText(s.wHandle,'Nun erhalten Sie 4 Testreize mit unterschiedlichen Temperaturen.','center',heightText,s.white); 
+    [~, heightText]=DrawFormattedText(s.wHandle,'Wie fühlen die sich an?','center',heightText+s.lineheight,s.white);
 end
 
 introTextTime = Screen('Flip',s.wHandle);

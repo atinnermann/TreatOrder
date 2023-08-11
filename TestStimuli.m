@@ -14,23 +14,24 @@ while GetSecs < tITIStart + t.glob.firstITI
     if abort; return; end
 end
 
-for t = 1:length(t.testStim.temps)
+for ntrial = 1:length(t.testStim.temps)
 
 %pain
 Screen('FillRect', s.wHandle, s.red, s.Fix1);
 Screen('FillRect', s.wHandle, s.red, s.Fix2);
 Screen('Flip',s.wHandle);
 
-[abort] = ApplyTemp(t.testStim.temps(t),t.testStim.dur,t,com);
+
+[abort] = ApplyTemp(t.testStim.temps(ntrial),t.testStim.dur,t,com);
 
 %ITI
 Screen('FillRect', s.wHandle, s.white, s.Fix1);
 Screen('FillRect', s.wHandle, s.white, s.Fix2);
 tITIStart = Screen('Flip',s.wHandle);
 
-fprintf('Remaining ITI %1.0f seconds...\n',t.testStim.ITI);
+fprintf('Remaining ITI %1.0f seconds...\n',t.testStim.ITI(ntrial));
 countedDown = 1;
-while GetSecs < tITIStart + t.testStim.ITI
+while GetSecs < tITIStart + t.testStim.ITI(ntrial)
     [countedDown] = CountDown(GetSecs-tITIStart,countedDown,'');
     [abort] = LoopBreaker(keys);
     if abort; return; end

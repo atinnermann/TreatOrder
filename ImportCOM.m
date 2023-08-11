@@ -14,7 +14,7 @@ if thermoino == 1
         com.thermoino     = thermoino;
         com.CEDTrigger = 255; % Trigger bits for thermode
     else
-        addpath('C:\Users\Mari Feldhaus\Documents\MATLAB\toolbox\Thermoino');
+        addpath('C:\Users\Mari Feldhaus\Documents\MATLAB\thermoino');
         com.thermoPort    = 'COM5';
         com.thermoBaud    = 115200;
         com.thermoino     = thermoino; 
