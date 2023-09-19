@@ -2,15 +2,11 @@ function t = ImportStimvars(toggleDebug)
 
 %% Preexposure
 
-t.exp.Temp            = 40;
-t.exp.Dur             = 20;
+t.exp.temp            = 40;
 t.exp.ITI             = 3;
-t.exp.Cue             = 2;
 
 %test stimuli
-t.testStim.temps      = [42 44 43 45]; 
 t.testStim.dur        = 6;
-t.testStim.cue        = [1.75 1.5 2.25 2];
 t.testStim.ITI        = [6 8 5 7];
 
 %% Awiszus
@@ -56,25 +52,29 @@ if ~toggleDebug
     t.awis.ITI        = [8 12]; % seconds between stimuli; will be randomized between two values - to use constant ITI, use two identical values
     t.awis.cue        = [1.5 2.5]; % jittered time prior to the stimulus that the white cross turns red; can be [0 0] (to turn off red cross altogether), but else MUST NOT BE LOWER THAN 0.5
     
-%     t.calib.tempOrder = [-1 0 1 2 -2 -0.5 0.5 1.5 2.5 -1 0 1 2 -1 0 1];
+    t.exp.dur         = 20;
+    t.testStim.temps  = [42 44 43 45]; 
+    
     t.calib.VASOrder  = [10 30 50 70 20 40 60 80];
     t.calib.stimDur   = 6; % to determine approximate wait time % pain stimulus duration
     t.calib.ITI       = [11 15];  
-    t.calib.Cue       = [1.5 2.5]; 
+    t.calib.cue       = [1.5 2.5]; 
     
 else
     t.glob.debug      = 1;
     
+    t.exp.dur         = 2;
+    t.testStim.temps  = [42]; 
+    
     t.awis.nTrials    = 3;
     t.awis.stimDur    = 2; % to determine approximate wait time
     t.awis.ITI        = [4 5];
-    t.awis.Cue        = [0.5 1.5];
-   
-%     t.calib.tempOrder = [-1 0 1 2 -2];
+    t.awis.cue        = [0.5 1.5];
+    
     t.calib.VASOrder  = [10 30 50 70];
     t.calib.stimDur   = 2; % to determine approximate wait time
     t.calib.ITI       = [4 5];
-    t.calib.Cue       = [0.5 1.5];
+    t.calib.cue       = [0.5 1.5];
     
 end
 
