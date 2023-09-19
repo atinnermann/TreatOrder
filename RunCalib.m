@@ -182,31 +182,26 @@ if awisTest == 1
         ListenChar;
         commandwindow;
         fprintf('Subject rated pain threshold above 30 with %d VAS\n',max(t.tmp.rating));
-        todo = input('How do you want to proceed? Redo thresholding or continue? (thresh/cont): ','s');
-        if strcmp(todo,'thresh')
-            error('Please restart script to redo thresholding');
-        elseif strcmp(todo,'cont')
-            testRatings = t.tmp.rating;
-            oldThresh = t.log.awis.thresh;
-            fprintf('Threshold will be lowered until rating is below 30 VAS\n');
-            %necessary step to get focus away from command window
-            tFig = figure;set(tFig,'Position',[1200 550 100 100]);pause(1);
-            while max(t.tmp.rating) >= 30 && oldThresh >= t.glob.minThresh + 0.3
-                newThresh = oldThresh - 0.3;
-                
-                fprintf('Current pain threshold set to %3.1f°C\n',newThresh);
-                
-                %apply 2 test stimuli at threshold temp
-                t = RunStim(newThresh,t.awis.testTrials,t.awis.testTimings,s,t,com,keys);
-                testRatings = [testRatings; t.tmp.rating];
-                
-                oldThresh = newThresh;
-            end
-            fprintf('\nNew pain threshold estimated at %3.1f°C\n',newThresh);
-            t.log.awis.threshOld = t.log.awis.thresh;
-            t.log.awis.thresh = newThresh;
-            t.tmp.corrRatings = testRatings;
+        testRatings = t.tmp.rating;
+        oldThresh = t.log.awis.thresh;
+        fprintf('Threshold will be lowered until rating is below 30 VAS\n');
+        %necessary step to get focus away from command window
+        tFig = figure;set(tFig,'Position',[1200 550 100 100]);pause(1);
+        while max(t.tmp.rating) >= 30 && oldThresh >= t.glob.minThresh + 0.3
+            newThresh = oldThresh - 0.3;
+            
+            fprintf('Current pain threshold set to %3.1f°C\n',newThresh);
+            
+            %apply 2 test stimuli at threshold temp
+            t = RunStim(newThresh,t.awis.testTrials,t.awis.testTimings,s,t,com,keys);
+            testRatings = [testRatings; t.tmp.rating];
+            
+            oldThresh = newThresh;
         end
+        fprintf('\nNew pain threshold estimated at %3.1f°C\n',newThresh);
+        t.log.awis.threshOld = t.log.awis.thresh;
+        t.log.awis.thresh = newThresh;
+        t.tmp.corrRatings = testRatings;
         ListenChar(-1);
         if ishandle(tFig);close(tFig);end
     end
@@ -331,31 +326,31 @@ if rangeCalib == 1
     t = rmfield(t,'hFig');
     
     %check fit and either continue, change fit or abort
-    f = 0;
-    while f == 0
-        ListenChar;
-        commandwindow;
-        yn = input('Do you want to continue? (y/n): ','s');
-        if ~isempty(yn)
-            f = 1;
-        end
-    end
-    if strcmp(yn,'n')
-        fa = input('Do you want to change fit or abort? (fit/abort): ','s');
-        if strcmp(fa,'abort')
-            return;
-        elseif strcmp(fa,'fit')
-            fit = input('Which fit do you want to use? (lin/sig): ','s');
-            if strcmp(fit,'lin')
-                t.calib.temps = round(t.tmp.lin(ind),1);
-                fprintf('\nFit has been changed to linear.\n');
-            elseif strcmp(fit,'sig')
-                t.calib.temps = round(t.tmp.sig(ind),1);
-                fprintf('\nFit has been changed to sigmoid.\n');
-            end
-        end
-    end
-    ListenChar(-1);
+%     f = 0;
+%     while f == 0
+%         ListenChar;
+%         commandwindow;
+%         yn = input('Do you want to continue? (y/n): ','s');
+%         if ~isempty(yn)
+%             f = 1;
+%         end
+%     end
+%     if strcmp(yn,'n')
+%         fa = input('Do you want to change fit or abort? (fit/abort): ','s');
+%         if strcmp(fa,'abort')
+%             return;
+%         elseif strcmp(fa,'fit')
+%             fit = input('Which fit do you want to use? (lin/sig): ','s');
+%             if strcmp(fit,'lin')
+%                 t.calib.temps = round(t.tmp.lin(ind),1);
+%                 fprintf('\nFit has been changed to linear.\n');
+%             elseif strcmp(fit,'sig')
+%                 t.calib.temps = round(t.tmp.sig(ind),1);
+%                 fprintf('\nFit has been changed to sigmoid.\n');
+%             end
+%         end
+%     end
+%     ListenChar(-1);
     
     %rename rating fields since they are saved in tmp variable
     t.log.range = t.tmp;
