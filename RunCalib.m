@@ -38,7 +38,7 @@ else
 end
 
 if strcmp(hostname,'stimpc1')
-    basePath    = '';
+    basePath    = 'D:\USER\tinnermann\TreatOrder\Paradigma\';
 elseif strcmp(hostname,'isn0068ebea3a78')
     basePath    = 'C:\Users\alexandra\Documents\Projects\TreatOrder\Paradigma\';
 else
