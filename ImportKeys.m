@@ -1,6 +1,6 @@
-function [keys] = ImportKeys(hostname)
+function [keys] = ImportKeys(t)
 
-if strcmp(hostname,'stimpc1') % curdes button box single diamond (HID NAR 12345)
+if strcmp(t.hostname,'stimpc1') % curdes button box single diamond (HID NAR 12345)
     %KbName('UnifyKeyNames');
     keys.keyList                  = KbName('KeyNames');
     keys.name.painful             = KbName('4$');

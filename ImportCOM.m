@@ -1,14 +1,14 @@
-function com = ImportCOM(hostname,thermoino)
+function com = ImportCOM(t,thermoino)
 
 if thermoino == 1
-    if strcmp(hostname,'stimpc1')
-        addpath('D:\USER\tinnermann\TreatOrder\Paradigma\Toolbox\Thermoino');
+    if strcmp(t.hostname,'stimpc1')
+        addpath(fullfile(t.basePath,'Toolbox\Thermoino'));
         com.thermoPort    = 'COM11';
         com.thermoBaud    = 115200;
         com.thermoino     = thermoino;  
 %         com.CEDTrigger    = 4; % Trigger bits for device
-    elseif strcmp(hostname,'isn0068ebea3a78')   
-        addpath('C:\Users\alexandra\Documents\MATLAB\toolbox\Thermoino');
+    elseif strcmp(t.hostname,'isn0068ebea3a78')   
+        addpath(fullfile(t.basePath,'toolbox\Thermoino'));
         com.thermoPort    = 'COM5';
         com.thermoBaud    = 115200;
         com.thermoino     = thermoino;

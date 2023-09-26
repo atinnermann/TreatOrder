@@ -17,7 +17,7 @@ calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
 
 [~, hostname]   = system('hostname');
 
-hostname        = deblank(hostname);
+t.hostname        = deblank(hostname);
 
 language = 'de'; % de or en
 
@@ -37,15 +37,15 @@ else
     toggleDebug = 0;
 end
 
-if strcmp(hostname,'stimpc1')
-    basePath    = 'D:\USER\tinnermann\TreatOrder\Paradigma\';
-elseif strcmp(hostname,'isn0068ebea3a78')
-    basePath    = 'C:\Users\alexandra\Documents\Projects\TreatOrder\Paradigma\';
+if strcmp(t.hostname,'stimpc1')
+    t.basePath    = 'D:\tinnermann\TreatOrd\';
+elseif strcmp(t.hostname,'isn0068ebea3a78')
+    t.basePath    = 'C:\Users\alexandra\Documents\Projects\TreatOrder\Paradigma\';
 else
-    basePath    = 'C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\';
+    t.basePath    = 'C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\';
 end
 
-calibPath = fullfile(basePath,'Calib');
+calibPath = fullfile(t.basePath,'Calib');
 savePath = fullfile(calibPath,'LogfilesCalib',sprintf('Sub%02.2d',subID));
 mkdir(savePath);
 fprintf('Saving data to %s.\n',savePath);
@@ -56,16 +56,16 @@ fprintf('Saving data to %s.\n',savePath);
 %%%%%%%%%%%%%%%%%%%%%%%
 
 % load all variables
-t               = ImportStimvars(toggleDebug);
-keys            = ImportKeys(hostname);
-com             = ImportCOM(hostname,thermoino);
+t               = ImportStimvars(t,toggleDebug);
+keys            = ImportKeys(t);
+com             = ImportCOM(t,thermoino);
 
 commandwindow;
 
 t.savePath      = savePath;
 t.saveFile      = fullfile(savePath,sprintf('Sub%02.2d_tStruct',subID));
 
-b = load(fullfile(basePath,'ExpBehav','randOrder_SkinPatches.mat'));
+b = load(fullfile(basePath,'ExpMRI','randOrder_SkinPatches.mat'));
 t.calib.skinPatch = b.randPatch(subID,:);
 
 if preExp == 1
@@ -84,7 +84,7 @@ if thermoino == 1
     end
 end
 
-s  = ImportScreenvars(toggleDebug,language,hostname);
+s  = ImportScreenvars(toggleDebug,language,t.hostname);
 save([t.savePath '\' sprintf('Sub%02.2d',subID) '_vars_' datestr(now,30)],'t','s','keys','com')
 
 %showing start screen
@@ -322,34 +322,7 @@ if rangeCalib == 1
     ShowInstruction(6,keys,s,com,1);
     close(t.hFig);
     t = rmfield(t,'hFig');
-    
-    %check fit and either continue, change fit or abort
-%     f = 0;
-%     while f == 0
-%         ListenChar;
-%         commandwindow;
-%         yn = input('Do you want to continue? (y/n): ','s');
-%         if ~isempty(yn)
-%             f = 1;
-%         end
-%     end
-%     if strcmp(yn,'n')
-%         fa = input('Do you want to change fit or abort? (fit/abort): ','s');
-%         if strcmp(fa,'abort')
-%             return;
-%         elseif strcmp(fa,'fit')
-%             fit = input('Which fit do you want to use? (lin/sig): ','s');
-%             if strcmp(fit,'lin')
-%                 t.calib.temps = round(t.tmp.lin(ind),1);
-%                 fprintf('\nFit has been changed to linear.\n');
-%             elseif strcmp(fit,'sig')
-%                 t.calib.temps = round(t.tmp.sig(ind),1);
-%                 fprintf('\nFit has been changed to sigmoid.\n');
-%             end
-%         end
-%     end
-%     ListenChar(-1);
-    
+
     %rename rating fields since they are saved in tmp variable
     t.log.range = t.tmp;
     t = rmfield(t,'tmp');

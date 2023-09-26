@@ -1,4 +1,4 @@
-function t = ImportStimvars(toggleDebug)
+function t = ImportStimvars(t,toggleDebug)
 
 %% Preexposure
 
