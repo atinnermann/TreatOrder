@@ -1,4 +1,4 @@
-function t = FitData(temps,rating,target_vas,t)
+function t = FitData(temps,rating,target_vas,t,s)
 
 X = temps';
 y = round(rating)';
@@ -35,7 +35,7 @@ t.tmp.lin = est_lin;
 % plot
 t.hFig = figure;
 set(t.hFig,'Visible','off');
-set(t.hFig,'Position',[860 260 500 400]);
+set(t.hFig,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.5 500 400]);
 xplot = 40:.1:48;
 plot(X,y,'kx',xplot,localsigfun(bsig,xplot),'r',...
     est_sig,localsigfun(bsig,est_sig),'ro',est_lin,target_vas,'bd',...

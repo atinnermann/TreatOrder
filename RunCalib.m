@@ -8,8 +8,8 @@ clc
 thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
 preExp          = 0;  %40°C preexposure
-awisThresh      = 0;  %pain threshold estimation
-awisTest        = 0;  %2 stimuli at pain threshold
+awisThresh      = 1;  %pain threshold estimation
+awisTest        = 1;  %2 stimuli at pain threshold
 rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
 Calib           = 1;  %9 stimuli calibration
 chooseFit       = 1;  %choose linear/sigmoid/manual temps
@@ -65,7 +65,7 @@ commandwindow;
 t.savePath      = savePath;
 t.saveFile      = fullfile(savePath,sprintf('Sub%02.2d_tStruct',subID));
 
-b = load(fullfile(basePath,'ExpMRI','randOrder_SkinPatches.mat'));
+b = load(fullfile(t.basePath,'ExpMRI','randOrder_SkinPatches.mat'));
 t.calib.skinPatch = b.randPatch(subID,:);
 
 if preExp == 1
@@ -88,7 +88,7 @@ s  = ImportScreenvars(toggleDebug,language,t.hostname);
 save([t.savePath '\' sprintf('Sub%02.2d',subID) '_vars_' datestr(now,30)],'t','s','keys','com')
 
 %showing start screen
-ShowInstruction(5,keys,s,com,1);
+ShowInstruction(6,keys,s,com,1);
 WaitSecs(0.5);
 
 %% Preexposure
@@ -99,7 +99,7 @@ if preExp == 1
     PreExposure(s,t,com,keys);
     warning('Start thermode program AT_TreatOrd_Calib and press enter when ready.');
     
-    ShowInstruction(7,keys,s,com,1);    
+    ShowInstruction(4,keys,s,com,1);    
     TestStimuli(s,t,com,keys);
 end
 
@@ -126,7 +126,7 @@ if awisThresh == 1
     %plot results
     f1 = figure;
     set(f1,'Visible','off');
-    set(f1,'Position',[860 260 500 400]);
+    set(f1,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 500 400]);
     plot(1:t.awis.nTrials,t.log.awis.rating,'ko');
     line([0 t.awis.nTrials+1],[t.log.awis.thresh t.log.awis.thresh]);
     ylim([41 45]);
@@ -134,7 +134,7 @@ if awisThresh == 1
     %control figure appearance and duration appearance
     set(f1, 'Visible', 'on');
     savefig(f1,fullfile(t.savePath,'Awiszus.fig'));
-    ShowInstruction(6,keys,s,com,1);
+    input('Please check data/figure and press enter when ready.\n');
     WaitSecs(0.5);
     close(f1);
     
@@ -184,7 +184,7 @@ if awisTest == 1
         oldThresh = t.log.awis.thresh;
         fprintf('Threshold will be lowered until rating is below 30 VAS\n');
         %necessary step to get focus away from command window
-        tFig = figure;set(tFig,'Position',[1200 550 100 100]);pause(1);
+        tFig = figure;set(tFig,'Position',[[s.screenRes.width*0.7 s.screenRes.height*0.6 100 100]]);pause(1);
         while max(t.tmp.rating) >= 30 && oldThresh >= t.glob.minThresh + 0.3
             newThresh = oldThresh - 0.3;
             
@@ -220,7 +220,7 @@ if rangeCalib == 1
     fprintf('\n=======Estimate pain window=======\n');
     
     %necessary step to get focus away from command window
-    tFig = figure;set(tFig,'Position',[1200 550 100 100]);pause(1);
+    tFig = figure;set(tFig,'Position',[s.screenRes.width*0.7 s.screenRes.height*0.6 100 100]);pause(1);
     
     %define file name for saving results
     fileName        = [sprintf('Sub%02.2d',subID) '_range_' datestr(now,30)];
@@ -296,7 +296,7 @@ if rangeCalib == 1
     end
     
     %estimate linear/sigmoid fit
-    t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t);
+    t = FitData([t.log.awis.thresh t.tmp.temp],[mean(t.log.awisTest.rating) t.tmp.rating],t.calib.VASrange,t,s);
     
     %calculate temperatures for next calib step based on better fit
     [~, ind] = ismember(t.calib.VASOrder,t.calib.VASrange);
@@ -319,7 +319,7 @@ if rangeCalib == 1
     %control figure appearance and duration appearance
     set(t.hFig, 'Visible', 'on');
     savefig(t.hFig,fullfile(t.savePath,'Fig_Range.fig'));
-    ShowInstruction(6,keys,s,com,1);
+    input('Please check data/figure and press enter when ready.\n');
     close(t.hFig);
     t = rmfield(t,'hFig');
 
@@ -328,7 +328,7 @@ if rangeCalib == 1
     t = rmfield(t,'tmp');
     
     %estimate linear/sigmoid fit for target VAS based on range ratings
-    t = FitData([t.log.awis.thresh t.log.range.temp],[mean(t.log.awisTest.rating) t.log.range.rating],t.calib.targetVAS,t);
+    t = FitData([t.log.awis.thresh t.log.range.temp],[mean(t.log.awisTest.rating) t.log.range.rating],t.calib.targetVAS,t,s);
     if t.tmp.resLin < t.tmp.resSig
         t.log.range.targetFit = t.tmp.lin;
     elseif t.tmp.resLin > t.tmp.resSig
@@ -348,7 +348,7 @@ if Calib == 1
     fprintf('\n=======Calibration=======\n');
     
     %necessary step to get focus away from command window
-    tFig = figure;set(tFig,'Position',[1200 550 100 100]); pause(1);
+    tFig = figure;set(tFig,'Position',[s.screenRes.width*0.7 s.screenRes.height*0.6 100 100]); pause(1);
     
     %define file name for saving results
     fileName        = [sprintf('Sub%02.2d',subID) '_calib_' datestr(now,30)];
@@ -361,7 +361,7 @@ if Calib == 1
     if ishandle(tFig);close(tFig);end
     
     %estimate linear and sigmoid fit
-    t = FitData([t.log.range.temp t.calib.temps],[t.log.range.rating t.tmp.rating],t.calib.targetVAS,t);
+    t = FitData([t.log.range.temp t.calib.temps],[t.log.range.rating t.tmp.rating],t.calib.targetVAS,t,s);
     
     %control figure appearance and duration appearance
     hFig = t.hFig;
@@ -369,7 +369,7 @@ if Calib == 1
     set(hFig, 'Visible', 'on');
     savefig(hFig,fullfile(t.savePath,'Fig_Calib.fig'));
     
-    ShowInstruction(6,keys,s,com,1);
+    input('Please check data/figure and press enter when ready.\n');
     set(hFig, 'Visible', 'off');
     
     %rename rating fields since they are saved in tmp variable
@@ -503,9 +503,9 @@ if calibTest == 1
     
     fprintf('\n=======Test Calibration=======\n');
     
-    %show wait screen for participant
-    ShowInstruction(4,keys,s,com,1);
-    WaitSecs(0.5);
+%     %show wait screen for participant
+%     ShowInstruction(4,keys,s,com,1);
+%     WaitSecs(0.5);
     
     t.calib.test.trials = repmat(t.calib.test.temps,1,2);
     
@@ -527,7 +527,7 @@ if calibTest == 1
     save(t.saveFile, 't');
     
     f2 = figure;
-    set(f2,'Position',[860 260 500 400]);
+    set(f2,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 500 400]);
     plot(t.log.calibTest.temp(1:4), nanmean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
     plot(t.calib.test.temps,t.calib.targetVAS,'ro');
     
@@ -543,7 +543,7 @@ end
 
 %% End
 
-ShowInstruction(4,keys,s,com,1);
+ShowInstruction(5,keys,s,com,1);
 
 QuickCleanup(thermoino);
 

@@ -92,33 +92,30 @@ elseif section == 3
         [~,heightText]=DrawFormattedText(s.wHandle, 'It is VERY IMPORTANT that you rate EACH AND EVERY stimulus!', 'center', heightText+s.lineheight, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, ' ', 'center', heightText+s.lineheight, s.white);
     end
-elseif section == 4
+ elseif section == 4
+    heightText = s.startY;
+    [~, heightText]=DrawFormattedText(s.wHandle,'Sie erhalten nun 4 Testreize mit unterschiedlichen Temperaturen.','center',heightText,s.white); 
+    [~, heightText]=DrawFormattedText(s.wHandle,'Wie fühlen die sich an?','center',heightText+s.lineheight,s.white);
+elseif section == 5
     heightText = s.startY;  
     if strcmp(s.language,'de')
         [~, heightText]=DrawFormattedText(s.wHandle,'Gleich geht es weiter...','center',heightText,s.white);
     elseif strcmp(s.language,'en')
         [~, heightText]=DrawFormattedText(s.wHandle,'Continuing shortly...','center',heightText,s.white);
     end
-elseif section == 5
+elseif section == 6
     heightText = s.startY;
     if strcmp(s.language,'de')
         [~, heightText]=DrawFormattedText(s.wHandle,'Gleich geht es los...','center',heightText,s.white);
     elseif strcmp(s.language,'en')
         [~, heightText]=DrawFormattedText(s.wHandle,'Starting shortly...','center',heightText,s.white);
     end
-elseif section == 6
-    fprintf('Please check data/figure and press enter when ready.\n');
-    heightText = s.startY;
-    [~, heightText]=DrawFormattedText(s.wHandle,'','center',heightText,s.white);  
-elseif section == 7
-    heightText = s.startY;
-    [~, heightText]=DrawFormattedText(s.wHandle,'Nun erhalten Sie 4 Testreize mit unterschiedlichen Temperaturen.','center',heightText,s.white); 
-    [~, heightText]=DrawFormattedText(s.wHandle,'Wie fühlen die sich an?','center',heightText+s.lineheight,s.white);
+
 end
 
 introTextTime = Screen('Flip',s.wHandle);
 
-if displayDuration == 1 && section ~= 6
+if displayDuration == 1
     fprintf('Displaying instructions... ');
     countedDown = 1;
 end
@@ -126,15 +123,17 @@ end
 while 1
     [keyIsDown, ~, keyCode] = KbCheck();
     if keyIsDown
-        if find(keyCode) == keys.name.confirm
-            break;
+        if section < 5 && (find(keyCode) == keys.name.confirm || find(keyCode) == keys.name.resume)
+                break
+        elseif section > 4 && find(keyCode) == keys.name.resume
+                break
         elseif find(keyCode) == keys.name.esc
             abort = 1;
             break;
         end
     end
     
-    if displayDuration == 1 && section ~= 6
+    if displayDuration == 1 
         [countedDown] = CountDown(GetSecs-introTextTime,countedDown,'.');
     end
 end
@@ -144,7 +143,7 @@ if abort
     return;
 end
 
-if displayDuration == 1 && section ~= 6
+if displayDuration == 1
     fprintf('\nInstructions were displayed for %d seconds.\n',round(GetSecs-introTextTime,0)); 
 end
 

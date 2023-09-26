@@ -2,7 +2,7 @@ function t = VASScale(nTrial,s,t,keys)
 
 %% Default values
 nRatingSteps    = 101;
-scaleWidth      = s.window(3)*0.35;
+scaleWidth      = s.window(3)*0.3;
 textSize        = 18;
 lineWidth       = 6;
 
