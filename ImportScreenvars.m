@@ -20,7 +20,7 @@ s.midpoint               = [s.window(3)/2 s.window(4)/2];       % Find the mid p
 s.startY                 = s.window(4)/2;
 
 s.fontname               = 'Verdana';
-s.fontsize               = 20; %30; %18;
+s.fontsize               = 24; %30; %18;
 s.linespace              = 8;
 s.lineheight             = s.fontsize + s.linespace;
 s.white                  = [255 255 255];

@@ -126,7 +126,7 @@ if awisThresh == 1
     %plot results
     f1 = figure;
     set(f1,'Visible','off');
-    set(f1,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 500 400]);
+    set(f1,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 s.screenRes.width*0.25 s.screenRes.height*0.3]);
     plot(1:t.awis.nTrials,t.log.awis.rating,'ko');
     line([0 t.awis.nTrials+1],[t.log.awis.thresh t.log.awis.thresh]);
     ylim([41 45]);
@@ -134,8 +134,8 @@ if awisThresh == 1
     %control figure appearance and duration appearance
     set(f1, 'Visible', 'on');
     savefig(f1,fullfile(t.savePath,'Awiszus.fig'));
-    input('Please check data/figure and press enter when ready.\n');
-    WaitSecs(0.5);
+    fprintf('Please check data/figure and press enter when ready.\n');
+    KbWaitKeyPress(keys.name.resume);
     close(f1);
     
     %save struct to save all results
@@ -319,7 +319,8 @@ if rangeCalib == 1
     %control figure appearance and duration appearance
     set(t.hFig, 'Visible', 'on');
     savefig(t.hFig,fullfile(t.savePath,'Fig_Range.fig'));
-    input('Please check data/figure and press enter when ready.\n');
+    fprintf('Please check data/figure and press enter when ready.\n');
+    KbWaitKeyPress(keys.name.resume);
     close(t.hFig);
     t = rmfield(t,'hFig');
 
@@ -369,7 +370,8 @@ if Calib == 1
     set(hFig, 'Visible', 'on');
     savefig(hFig,fullfile(t.savePath,'Fig_Calib.fig'));
     
-    input('Please check data/figure and press enter when ready.\n');
+    fprintf('Please check data/figure and press enter when ready.\n');
+    KbWaitKeyPress(keys.name.resume);
     set(hFig, 'Visible', 'off');
     
     %rename rating fields since they are saved in tmp variable
@@ -527,7 +529,7 @@ if calibTest == 1
     save(t.saveFile, 't');
     
     f2 = figure;
-    set(f2,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 500 400]);
+    set(f2,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 s.screenRes.width*0.25 s.screenRes.height*0.3]);
     plot(t.log.calibTest.temp(1:4), nanmean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
     plot(t.calib.test.temps,t.calib.targetVAS,'ro');
     
