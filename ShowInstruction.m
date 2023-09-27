@@ -11,8 +11,8 @@ if section == 1
     fprintf('Ready PREEXPOSURE protocol.\n');
     heightText = s.startY-s.lineheight*2;
     if strcmp(s.language,'de')
-        [~,heightText]=DrawFormattedText(s.wHandle, 'Gleich erhalten Sie über die Thermode einen', 'center', heightText, s.white);
-        [~,heightText]=DrawFormattedText(s.wHandle, 'langen Hitzereizen, der leicht schmerzhaft sein kann.', 'center', heightText+s.lineheight, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Gleich erhalten Sie über die Thermode einige', 'center', heightText, s.white);
+        [~,heightText]=DrawFormattedText(s.wHandle, 'Hitzereize, die leicht schmerzhaft sein können.', 'center', heightText+s.lineheight, s.white);
     elseif strcmp(s.language,'en')
         [~,heightText]=DrawFormattedText(s.wHandle, 'You will now receive a number of very brief heat stimuli,', 'center', heightText, s.white);
         [~,heightText]=DrawFormattedText(s.wHandle, 'which may or may not be painful for you.', 'center', heightText+s.lineheight, s.white);

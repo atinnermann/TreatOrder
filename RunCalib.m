@@ -7,7 +7,7 @@ clc
 
 thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
-preExp          = 0;  %40°C preexposure
+preExp          = 1;  %40°C preexposure
 awisThresh      = 1;  %pain threshold estimation
 awisTest        = 1;  %2 stimuli at pain threshold
 rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
@@ -45,8 +45,8 @@ else
     t.basePath    = 'C:\Users\Mari Feldhaus\Documents\Tinnermann\TreatOrd\';
 end
 
-calibPath = fullfile(t.basePath,'Calib');
-savePath = fullfile(calibPath,'LogfilesCalib',sprintf('Sub%02.2d',subID));
+%calibPath = fullfile(t.basePath,'Calib');
+savePath = fullfile(t.basePath,'LogfilesCalib',sprintf('Sub%02.2d',subID));
 mkdir(savePath);
 fprintf('Saving data to %s.\n',savePath);
 
@@ -65,16 +65,13 @@ commandwindow;
 t.savePath      = savePath;
 t.saveFile      = fullfile(savePath,sprintf('Sub%02.2d_tStruct',subID));
 
-b = load(fullfile(t.basePath,'ExpMRI','randOrder_SkinPatches.mat'));
-t.calib.skinPatch = b.randPatch(subID,:);
+% b = load(fullfile(t.basePath,'ExpMRI','randOrder_SkinPatches.mat'));
+% t.calib.skinPatch = b.randPatch(subID,:);
 
-if preExp == 1
-    warning('Start thermode program AT_preExp and press enter when ready.');
-else
-    warning('Start thermode program AT_TreatOrd_Calib and press enter when ready.');
-end
-input(sprintf('Change thermode to skin patch %d and press enter when ready.',t.calib.skinPatch(1)));
-WaitSecs(0.5);
+warning('Start thermode program AT_TreatOrd_Calib and press enter when ready.');
+
+% input(sprintf('Change thermode to skin patch %d and press enter when ready.',t.calib.skinPatch(1)));
+% WaitSecs(0.5);
 
 % instantiate serial object for thermoino control
 if thermoino == 1
@@ -97,10 +94,9 @@ if preExp == 1
     
     ShowInstruction(1,keys,s,com,1);
     PreExposure(s,t,com,keys);
-    warning('Start thermode program AT_TreatOrd_Calib and press enter when ready.');
-    
-    ShowInstruction(4,keys,s,com,1);    
-    TestStimuli(s,t,com,keys);
+
+%     ShowInstruction(4,keys,s,com,1);    
+%     TestStimuli(s,t,com,keys);
 end
 
 %% Awiszus pain threshold estimation
@@ -282,7 +278,7 @@ if rangeCalib == 1
                 fprintf('\nAfter 6 trials highest pain rating is still below %d\n',maxRat);
                 while max(t.tmp.rating) < maxRat && t.log.awis.thresh + newHigh <= t.glob.maxTemp
                     newHigh = newHigh + 1;
-                    t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings2,s,t,com,keys);
+                    t = RunStim(newHigh,[length(t.calib.rangeOrder2) 1],t.calib.rangeTimings,s,t,com,keys);
                     t.calib.rangeOrder2 = [t.calib.rangeOrder2 newHigh];
                 end           
             end

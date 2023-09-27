@@ -3,7 +3,7 @@ function com = ImportCOM(t,thermoino)
 if thermoino == 1
     if strcmp(t.hostname,'stimpc1')
         addpath(fullfile(t.basePath,'Toolbox\Thermoino'));
-        com.thermoPort    = 'COM11';
+        com.thermoPort    = 'COM16';
         com.thermoBaud    = 115200;
         com.thermoino     = thermoino;  
 %         com.CEDTrigger    = 4; % Trigger bits for device
