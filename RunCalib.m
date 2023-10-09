@@ -5,7 +5,7 @@ function [abort] = RunCalib(subID)
 clear mex global
 clc
 
-thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
+thermoino       = 1; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
 preExp          = 1;  %40°C preexposure
 awisThresh      = 1;  %pain threshold estimation
@@ -68,7 +68,7 @@ t.saveFile      = fullfile(savePath,sprintf('Sub%02.2d_tStruct',subID));
 % b = load(fullfile(t.basePath,'ExpMRI','randOrder_SkinPatches.mat'));
 % t.calib.skinPatch = b.randPatch(subID,:);
 
-warning('Start thermode program AT_TreatOrd_Calib and press enter when ready.');
+% warning('Start thermode program AT_TreatOrd and press enter when ready.');
 
 % input(sprintf('Change thermode to skin patch %d and press enter when ready.',t.calib.skinPatch(1)));
 % WaitSecs(0.5);
@@ -122,7 +122,7 @@ if awisThresh == 1
     %plot results
     f1 = figure;
     set(f1,'Visible','off');
-    set(f1,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 s.screenRes.width*0.25 s.screenRes.height*0.3]);
+    set(f1,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.3 s.screenRes.width*0.25 s.screenRes.height*0.3]);
     plot(1:t.awis.nTrials,t.log.awis.rating,'ko');
     line([0 t.awis.nTrials+1],[t.log.awis.thresh t.log.awis.thresh]);
     ylim([41 45]);
@@ -180,7 +180,7 @@ if awisTest == 1
         oldThresh = t.log.awis.thresh;
         fprintf('Threshold will be lowered until rating is below 30 VAS\n');
         %necessary step to get focus away from command window
-        tFig = figure;set(tFig,'Position',[[s.screenRes.width*0.7 s.screenRes.height*0.6 100 100]]);pause(1);
+        tFig = figure;set(tFig,'Position',[s.screenRes.width*0.7 s.screenRes.height*0.6 100 100]);pause(1);
         while max(t.tmp.rating) >= 30 && oldThresh >= t.glob.minThresh + 0.3
             newThresh = oldThresh - 0.3;
             
@@ -412,7 +412,7 @@ if chooseFit == 1
 
     %calculate fixed temperatures in case they are needed
     maxTemp = max(t.log.calib.temp);
-    maxRat = t.log.calib.rating(t.log.calib.temp == maxTemp);
+    maxRat = max(t.log.calib.rating(t.log.calib.temp == maxTemp));
 %     if maxTemp >= 45.5 && (max(t.log.calib.rating)-min(t.log.calib.rating)) < 50 && any(diff(t.log.calib.temp) >= 1)
 %         offset = 1.5;
     if maxTemp <= 44
@@ -525,7 +525,7 @@ if calibTest == 1
     save(t.saveFile, 't');
     
     f2 = figure;
-    set(f2,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.4 s.screenRes.width*0.25 s.screenRes.height*0.3]);
+    set(f2,'Position',[s.screenRes.width*0.05 s.screenRes.height*0.3 s.screenRes.width*0.25 s.screenRes.height*0.3]);
     plot(t.log.calibTest.temp(1:4), nanmean([t.log.calibTest.rating(1:4)' t.log.calibTest.rating(5:8)'],2), 'kx','MarkerSize',10); hold on
     plot(t.calib.test.temps,t.calib.targetVAS,'ro');
     

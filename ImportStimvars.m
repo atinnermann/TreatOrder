@@ -30,7 +30,7 @@ t.awis.testTrials     = 2;
 %% CORE VARIABLES: Other protocol parameters
 t.glob.debug          = 0;
 
-t.glob.baseTemp       = 32; % to determine approximate wait time
+t.glob.baseTemp       = 34; % to determine approximate wait time
 t.glob.riseSpeed      = 15; % to determine approximate wait time
 t.glob.fallSpeed      = 15; % to determine approximate wait time
 
