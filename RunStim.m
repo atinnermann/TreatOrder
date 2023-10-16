@@ -61,7 +61,7 @@ fprintf(' %3.1f  ',temps);
 fprintf('\n');
 
 t.tmp.scaleInitVAS = round(26+(76-26).*rand(1,nTrials));
-
+    
 for nTrial = tCount:nTrials 
      
     fprintf('\n=======TRIAL %d of %d=======\n',nTrial,nTrials);
@@ -72,7 +72,6 @@ for nTrial = tCount:nTrials
         Screen('FillRect', s.wHandle, s.white, s.Fix2);
         tITIStart = Screen('Flip',s.wHandle);
         
-        %fprintf('ITI start at %1.1fs\n',GetSecs-tStartScript);
         fprintf('First ITI of %1.0f seconds\n',t.glob.firstITI);
         while GetSecs < tITIStart + t.glob.firstITI
             [abort] = LoopBreaker(keys);
@@ -114,25 +113,14 @@ for nTrial = tCount:nTrials
     LogRating(t);
     save(t.saveFile, 't');
     
-    rateDur = t.tmp.reactionTime(nTrial);
-    
     %ITI
     Screen('FillRect', s.wHandle, s.white, s.Fix1);
     Screen('FillRect', s.wHandle, s.white, s.Fix2);
     tITIStart = Screen('Flip',s.wHandle);
     
-    if nTrial == length(tempOrder)
-        sITIRemaining = t.glob.lastITI;
-    elseif t.glob.debug == 1
-        sITIRemaining = timings.ITI(nTrial);
-    else
-        sITIRemaining = timings.ITI(nTrial)-rateDur;
-    end
-    
-    %fprintf('ITI start at %1.1fs\n',GetSecs-tStartScript);
-    fprintf('Remaining ITI %1.0f seconds...\n',sITIRemaining);
+    fprintf('Remaining ITI %1.0f seconds...\n',timings.ITI(nTrial));
     countedDown = 1;
-    while GetSecs < tITIStart + sITIRemaining
+    while GetSecs < tITIStart + timings.ITI(nTrial)
         [countedDown] = CountDown(GetSecs-tITIStart,countedDown,'');
         [abort] = LoopBreaker(keys);
         if abort; return; end

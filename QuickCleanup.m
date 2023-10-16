@@ -4,6 +4,7 @@
             UseThermoino('Kill');
         end
         sca;                                                               % Close window; also closes io64
-        ListenChar(0);                                                     % Use keys again
+        ListenChar;                                                     % Use keys again
         commandwindow;
+        clear all
 end

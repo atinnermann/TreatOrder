@@ -35,7 +35,7 @@ t.glob.riseSpeed      = 15; % to determine approximate wait time
 t.glob.fallSpeed      = 15; % to determine approximate wait time
 
 t.glob.minTemp        = 40;
-t.glob.maxTemp        = 48;
+t.glob.maxTemp        = 49;
 t.glob.minThresh      = 41;
 t.glob.maxThresh      = 45;
 t.glob.defaultThresh  = 42;

@@ -34,16 +34,16 @@ while numberOfSecondsRemaining  > 0
     Screen('FillRect',s.wHandle,s.white,highLabelRect);
     Screen('FillRect',s.wHandle,s.red,activeTicRects(:,currentRating));
     
-    Screen('TextSize',s.wHandle,s.fontsize);
-    DrawFormattedText(s.wHandle, 'Wie bewerten Sie die Schmerzhaftigkeit', 'center',s.midpoint(2)-s.midpoint(2)*0.25, s.white);
-    DrawFormattedText(s.wHandle, 'des Hitzereizes?', 'center',s.midpoint(2)-s.midpoint(2)*0.25+s.lineheight, s.white);
-    
     Screen('TextSize',s.wHandle,textSize);
     Screen('DrawText',s.wHandle,'kein',axesRect(1)-17,s.midpoint(2)+25,s.white);
     Screen('DrawText',s.wHandle,'Schmerz',axesRect(1)-40,s.midpoint(2)+45,s.white);
     
     Screen('DrawText',s.wHandle,'unerträglicher',axesRect(3)-53,s.midpoint(2)+25,s.white);
     Screen('DrawText',s.wHandle,'Schmerz',axesRect(3)-40,s.midpoint(2)+45,s.white);
+    
+    Screen('TextSize',s.wHandle,s.fontsize);
+    DrawFormattedText(s.wHandle, 'Wie bewerten Sie die Schmerzhaftigkeit', 'center',s.midpoint(2)-s.midpoint(2)*0.25, s.white);
+    DrawFormattedText(s.wHandle, 'des Hitzereizes?', 'center',s.midpoint(2)-s.midpoint(2)*0.25+s.lineheight, s.white);
     
     if response == 0
         

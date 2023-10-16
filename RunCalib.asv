@@ -5,11 +5,11 @@ function [abort] = RunCalib(subID)
 clear mex global
 clc
 
-thermoino       = 1; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
+thermoino       = 0; % 0: no thermoino connected; 1: thermoino connected; 2: send trigger directly to thermode via e.g. outp
 
-preExp          = 1;  %40°C preexposure
-awisThresh      = 1;  %pain threshold estimation
-awisTest        = 1;  %2 stimuli at pain threshold
+preExp          = 0;  %40°C preexposure
+awisThresh      = 0;  %pain threshold estimation
+awisTest        = 0;  %2 stimuli at pain threshold
 rangeCalib      = 1;  %3 stimuli to estimate pain range plus adaptive trials
 Calib           = 1;  %8 stimuli calibration
 calibTest       = 1;  %2 x 4 stimuli with 4 estimated temps ("25/40/55/70)
@@ -324,6 +324,9 @@ if rangeCalib == 1
     %save struct to save all results
     save(t.saveFile, 't');
     
+     Screen('TextSize',s.wHandle,s.fontsize);
+    DrawFormattedText(s.wHandle, 'Wie bewerten Sie die Schmerzhaftigkeit', 'center',s.midpoint(2)-s.midpoint(2)*0.25, s.white);
+    DrawFormattedText(s.wHandle, 'des Hitzereizes?', 'center',s.midpoint(2)-s.midpoint(2)*0.25+s.lineheight, s.white);
 end
 
 %% Calibration
